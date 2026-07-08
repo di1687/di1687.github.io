@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>北信科咸鱼</title>
+<style>
+  :root {
+    --primary: #4A90D9;
+    --primary-light: #E8F1FB;
+    --success: #52C41A;
+    --warning: #FAAD14;
+    --danger: #FF4D4F;
+    --bg: #F5F7FA;
+    --card: #FFFFFF;
+    --text: #2C3E50;
+    --text-secondary: #7F8C8D;
+    --border: #E8ECF0;
+    --radius: 12px;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --nav-height: 64px;
+    --header-height: 56px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    max-width: 100%;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .page { display: none; padding-bottom: calc(var(--nav-height) + 20px); min-height: 100vh; }
+  .page.active { display: block; }
+
+  .header {
+    position: sticky; top: 0; z-index: 100;
+    background: var(--card); padding: 12px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    height: var(--header-height);
+  }
+  .header .logo { font-size: 18px; font-weight: 700; color: var(--primary); display: flex; align-items: center; gap: 6px; }
+  .header .logo span { font-size: 22px; }
+  .header .user-badge {
+    font-size: 12px; color: var(--text-secondary);
+    background: var(--bg); padding: 6px 10px; border-radius: 20px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .header .user-badge .dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; }
+
+  .search-bar {
+    margin: 12px 16px; display: flex; gap: 8px;
+  }
+  .search-bar input {
+    flex: 1; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 24px; font-size: 14px; outline: none; background: var(--card);
+    transition: border-color 0.2s;
+  }
+  .search-bar input:focus { border-color: var(--primary); }
+  .search-bar button {
+    padding: 10px 18px; background: var(--primary); color: #fff;
+    border: none; border-radius: 24px; font-size: 14px; cursor: pointer;
+    font-weight: 500; white-space: nowrap;
+  }
+
+  .category-tabs {
+    display: flex; gap: 8px; padding: 0 16px; margin-bottom: 12px; overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .category-tabs::-webkit-scrollbar { display: none; }
+  .category-tab {
+    padding: 8px 16px; border-radius: 20px; font-size: 13px;
+    white-space: nowrap; cursor: pointer; border: 1.5px solid var(--border);
+    background: var(--card); color: var(--text-secondary); transition: all 0.2s;
+  }
+  .category-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+  .item-list { padding: 0 16px; display: flex; flex-direction: column; gap: 12px; }
+  .item-card {
+    background: var(--card); border-radius: var(--radius); padding: 14px;
+    box-shadow: var(--shadow); cursor: pointer; transition: transform 0.15s;
+    display: flex; gap: 12px;
+  }
+  .item-card:active { transform: scale(0.98); }
+  .item-card .thumb {
+    width: 90px; height: 90px; border-radius: 8px; background: var(--bg);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 36px; overflow: hidden;
+  }
+  .item-card .thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .item-card .info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; min-width: 0; }
+  .item-card .title { font-size: 15px; font-weight: 600; line-height: 1.4; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item-card .meta { font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
+  .item-card .price-row { display: flex; align-items: center; justify-content: space-between; }
+  .item-card .price { font-size: 18px; font-weight: 700; color: var(--danger); }
+  .item-card .price .unit { font-size: 13px; font-weight: 500; }
+  .item-card .original-price { font-size: 12px; color: #bbb; text-decoration: line-through; margin-left: 6px; }
+  .item-card .tag {
+    font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 500;
+  }
+  .tag-textbook { background: #E6F7FF; color: #1890FF; }
+  .tag-other { background: #F6FFED; color: #52C41A; }
+  .tag-sold { background: #FFF2F0; color: #FF4D4F; }
+
+  .empty-state {
+    text-align: center; padding: 60px 20px; color: var(--text-secondary);
+  }
+  .empty-state .icon { font-size: 56px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  .bottom-nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width:100%; height: var(--nav-height);
+    background: var(--card); border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-around;
+    z-index: 200; padding-bottom: env(safe-area-inset-bottom);
+  }
+  .nav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 2px;
+    font-size: 11px; color: var(--text-secondary); cursor: pointer;
+    padding: 6px 16px; border-radius: 12px; transition: all 0.2s;
+    border: none; background: none;
+  }
+  .nav-item .nav-icon { font-size: 22px; }
+  .nav-item.active { color: var(--primary); }
+  .nav-item.publish-btn {
+    background: var(--primary); color: #fff; border-radius: 50%;
+    width: 48px; height: 48px; margin-top: -20px; box-shadow: 0 4px 12px rgba(74,144,217,0.4);
+  }
+  .nav-item.publish-btn .nav-icon { font-size: 24px; }
+  .nav-item.publish-btn.active { color: #fff; }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    z-index: 300; align-items: flex-end; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-sheet {
+    background: var(--card); width: 100%; max-width:100%;
+    border-radius: 20px 20px 0 0; padding: 0 20px 30px;
+    max-height: 85vh; overflow-y: auto; animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+  .modal-sheet .modal-handle {
+    width: 36px; height: 4px; background: #ddd; border-radius: 2px;
+    margin: 12px auto 16px;
+  }
+  .modal-sheet .detail-title { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .modal-sheet .detail-meta { font-size: 13px; color: var(--text-secondary); margin-bottom: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+  .modal-sheet .detail-price { font-size: 24px; font-weight: 700; color: var(--danger); margin-bottom: 12px; }
+  .modal-sheet .detail-desc { font-size: 14px; line-height: 1.7; color: var(--text); margin-bottom: 16px; white-space: pre-wrap; }
+  .modal-sheet .detail-images { display: flex; gap: 8px; overflow-x: auto; margin-bottom: 16px; }
+  .modal-sheet .detail-images .d-img {
+    width: 120px; height: 120px; border-radius: 8px; background: var(--bg);
+    flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+    font-size: 48px;
+  }
+  .modal-sheet .contact-btn {
+    width: 100%; padding: 14px; background: var(--primary); color: #fff;
+    border: none; border-radius: 24px; font-size: 16px; font-weight: 600;
+    cursor: pointer; margin-bottom: 8px;
+  }
+  .modal-sheet .fav-btn {  
+    width: 100%; padding: 12px; background: var(--bg); color: var(--text);
+    border: 1.5px solid var(--border); border-radius: 24px; font-size: 14px;
+    cursor: pointer;
+  }
+  .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999; justify-content: center; align-items: center; }
+  .modal-content { background: #fff; border-radius: 16px; width: 90%; max-width: 500px; max-height: 85vh; overflow-y: auto; }
+  .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px; border-bottom: 1px solid #eee; font-weight: 600; }
+  .modal-close { cursor: pointer; font-size: 20px; color: #999; }
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 10px 14px; border: 1.5px solid var(--border);
+    border-radius: 10px; font-size: 14px; outline: none; background: var(--card);
+    font-family: inherit; transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--primary); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-row { display: flex; gap: 12px; }
+  .form-row .form-group { flex: 1; }
+  .btn-primary {
+    width: 100%; padding: 14px; background: var(--primary); color: #fff;
+    border: none; border-radius: 24px; font-size: 16px; font-weight: 600;
+    cursor: pointer; margin-top: 8px;
+  }
+  .btn-outline {
+    width: 100%; padding: 12px; background: transparent; color: var(--text-secondary);
+    border: 1.5px solid var(--border); border-radius: 24px; font-size: 14px;
+    cursor: pointer; text-align: center;
+  }
+
+  .auth-container {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; min-height: 80vh; padding: 20px;
+  }
+  .auth-card {
+    width: 100%; background: var(--card); border-radius: 20px;
+    padding: 30px 24px; box-shadow: var(--shadow);
+  }
+  .auth-card .auth-icon { font-size: 48px; text-align: center; margin-bottom: 8px; }
+  .auth-card h2 { text-align: center; font-size: 20px; margin-bottom: 4px; }
+  .auth-card .auth-subtitle { text-align: center; font-size: 13px; color: var(--text-secondary); margin-bottom: 24px; }
+  .auth-card .privacy-note {
+    font-size: 12px; color: var(--text-secondary); text-align: center;
+    margin-top: 16px; padding: 10px; background: var(--primary-light);
+    border-radius: 8px; line-height: 1.6;
+  }
+
+  .toast {
+    position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+    background: #333; color: #fff; padding: 10px 24px;
+    border-radius: 24px; font-size: 14px; z-index: 999;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+  }
+  .toast.show { opacity: 1; }
+
+  .profile-card {
+    background: var(--card); margin: 12px 16px; border-radius: var(--radius);
+    padding: 20px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px;
+  }
+  .profile-card .avatar {
+    width: 52px; height: 52px; border-radius: 50%; background: var(--primary-light);
+    display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0;
+  }
+  .profile-card .profile-info .p-name { font-size: 16px; font-weight: 600; }
+  .profile-card .profile-info .p-dept { font-size: 13px; color: var(--text-secondary); }
+  .section-title { font-size: 15px; font-weight: 600; padding: 16px 16px 8px; }
+
+  .my-items { padding: 0 16px; display: flex; flex-direction: column; gap: 10px; }
+  .my-item-card {
+    background: var(--card); border-radius: var(--radius); padding: 12px 14px;
+    box-shadow: var(--shadow); display: flex; align-items: center; justify-content: space-between;
+  }
+  .my-item-card .my-info { flex: 1; min-width: 0; }
+  .my-item-card .my-title { font-size: 14px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .my-item-card .my-price { font-size: 13px; color: var(--text-secondary); }
+  .my-item-card .my-status { font-size: 11px; padding: 3px 10px; border-radius: 10px; font-weight: 500; }
+  .status-active { background: #F6FFED; color: #52C41A; }
+  .status-sold { background: #FFF2F0; color: #FF4D4F; }
+  .my-item-card .mark-sold-btn {
+    font-size: 12px; padding: 6px 12px; border-radius: 14px; border: 1px solid var(--success);
+    background: #fff; color: var(--success); cursor: pointer;
+  }
+
+  .img-placeholder {
+    width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
+    font-size: 36px;
+  }
+  .bg-1 { background: linear-gradient(135deg, #E8F1FB, #D4E6F9); }
+  .bg-2 { background: linear-gradient(135deg, #F6FFED, #E6F9D4); }
+  .bg-3 { background: linear-gradient(135deg, #FFF7E6, #FFE7BA); }
+  .bg-4 { background: linear-gradient(135deg, #F9F0FF, #EFDBFF); }
+  .bg-5 { background: linear-gradient(135deg, #FFF0F6, #FFD6E7); }
+
+  @media (min-width: 481px) {
+    body { border-left: 1px solid var(--border); border-right: 1px solid var(--border); }
+  }
+  .page-messages { padding-bottom: 80px; }
+.conv-card {
+  display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+  background: #fff; border-bottom: 1px solid #f0f0f0; cursor: pointer;
+}
+.conv-avatar { width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.conv-info { flex: 1; min-width: 0; }
+.conv-name { font-weight: 600; font-size: 15px; }
+.conv-preview { font-size: 13px; color: #999; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.conv-meta { text-align: right; flex-shrink: 0; }
+.conv-time { font-size: 11px; color: #bbb; }
+.conv-badge { display: inline-block; background: var(--danger); color: #fff; font-size: 11px; padding: 2px 7px; border-radius: 10px; margin-top: 4px; }
+.chat-header {
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: #fff; border-bottom: 1px solid #eee; position: sticky; top: 0; z-index: 10;
+}
+.chat-header .back-btn { font-size: 20px; cursor: pointer; padding: 4px; }
+.chat-body { flex: 1; overflow-y: auto; padding: 12px 16px; background: #f5f5f5; }
+.chat-bubble { max-width: 75%; margin-bottom: 12px; padding: 10px 14px; border-radius: 16px; font-size: 14px; line-height: 1.5; word-break: break-word; }
+.chat-bubble.mine { background: var(--primary); color: #fff; margin-left: auto; border-bottom-right-radius: 4px; }
+.chat-bubble.other { background: #fff; margin-right: auto; border-bottom-left-radius: 4px; }
+.chat-bubble .bubble-time { font-size: 10px; opacity: 0.6; margin-top: 4px; text-align: right; }
+.chat-input-bar {
+  display: flex; gap: 8px; padding: 10px 16px; background: #fff; border-top: 1px solid #eee;
+  position: sticky; bottom: 0;
+}
+.chat-input-bar input { flex: 1; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 20px; font-size: 14px; outline: none; }
+.chat-input-bar button { padding: 10px 18px; background: var(--primary); color: #fff; border: none; border-radius: 20px; font-size: 14px; cursor: pointer; }
+.chat-empty { text-align: center; padding: 60px 20px; color: #bbb; }
+</style>
+</head>
+<body>
+
+<div class="toast" id="toast"></div>
+
+<!-- ==================== 认证页面 ==================== -->
+<div class="page active" id="page-auth">
+  <div class="auth-container">
+    <div class="auth-card">
+      <div class="auth-icon">🎓</div>
+      <h2>北信科咸鱼</h2>
+      <p class="auth-subtitle">安全 · 可信 · 无打扰</p>
+
+      <div style="display:flex;gap:8px;margin-bottom:16px;">
+        <button id="auth-tab-login" class="category-tab active" style="flex:1;text-align:center;" onclick="switchAuthTab('login')">🔑 登录</button>
+        <button id="auth-tab-register" class="category-tab" style="flex:1;text-align:center;" onclick="switchAuthTab('register')">📝 注册</button>
+      </div>
+
+      <div class="form-group">
+        <label>学号 / 工号</label>
+        <input type="text" id="auth-student-id" placeholder="请输入你的学号或工号" maxlength="20">
+      </div>
+
+      <div class="form-group">
+        <label>密码</label>
+        <input type="password" id="auth-password" placeholder="请输入密码（至少6位）" maxlength="30">
+      </div>
+
+      <div id="auth-register-fields" style="display:none;">
+        <div class="form-group">
+          <label>真实姓名（不对外显示）</label>
+          <input type="text" id="auth-real-name" placeholder="请输入你的真实姓名" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label>学校邮箱 <span style="color:var(--danger);">*</span></label>
+          <input type="email" id="auth-email" placeholder="例如：2024001@bistu.edu.cn" maxlength="50">
+        </div>
+        <div class="form-group">
+          <label>对外显示昵称</label>
+          <input type="text" id="auth-display-name" placeholder="其他人看到的昵称，留空则自动生成" maxlength="12">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>院系</label>
+            <select id="auth-department">
+                            <option value="">请选择院系</option>
+                            <option value="机电工程学院">机电工程学院</option>
+              <option value="仪器科学与光电工程学院">仪器科学与光电工程学院</option>
+              <option value="自动化学院">自动化学院</option>
+              <option value="信息与通信工程学院">信息与通信工程学院</option>
+              <option value="计算机学院">计算机学院</option>
+              <option value="经济管理学院">经济管理学院</option>
+              <option value="信息管理学院">信息管理学院</option>
+              <option value="马克思主义学院">马克思主义学院</option>
+              <option value="公共管理与传媒学院">公共管理与传媒学院</option>
+              <option value="外国语学院">外国语学院</option>
+              <option value="理学院">理学院</option>
+              <option value="应用技术学院">应用技术学院</option>
+              <option value="伊利诺伊学院">伊利诺伊学院</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>入学年份</label>
+            <select id="auth-grade">
+              <option value="">请选择</option>
+              <option value="2020">2020级</option>
+              <option value="2021">2021级</option>
+              <option value="2022">2022级</option>
+              <option value="2023">2023级</option>
+              <option value="2024">2024级</option>
+              <option value="2025">2025级</option>
+              <option value="教师">教师</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>身份</label>
+          <select id="auth-role">
+            <option value="student">学生</option>
+            <option value="teacher">教师</option>
+          </select>
+        </div>
+      </div>
+      <div id="auth-verify-section" style="display:none;">
+        <div class="form-group">
+          <label>📧 验证码</label>
+          <input type="text" id="auth-verify-code" placeholder="请输入6位验证码（查看终端）" maxlength="6">
+          <span style="font-size:12px;color:var(--text-secondary);">验证码已发送至你的学校邮箱，同时在终端中显示</span>
+        </div>
+        <button class="btn-primary" onclick="doVerify()">✅ 验证并完成注册</button>
+        <button class="btn-outline" style="margin-top:8px;" onclick="cancelVerify()">返回修改</button>
+      </div>
+
+            <div id="auth-register-btn-group">
+        <button class="btn-primary" id="auth-btn-login" onclick="doLogin()">🔑 登录</button>
+        <button class="btn-primary" id="auth-btn-register" onclick="doRegister()" style="display:none;">📝 注册</button>
+      </div>
+
+      <div class="privacy-note">
+        🛡️ <strong>隐私保护承诺</strong><br>
+        你的真实姓名不会公开，仅用于账号管理。<br>
+        对外展示的昵称可随时修改。<br>
+        本平台为纯公益服务，不收集任何敏感个人信息。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== 首页 ==================== -->
+<div class="page" id="page-home">
+  <div class="header">
+    <div class="logo"><span>🎓</span>北信科咸鱼</div>
+    <div class="user-badge" id="home-badge"><span class="dot"></span><span id="home-dept"></span></div>
+  </div>
+
+  <div class="search-bar">
+    <input type="text" id="search-input" placeholder="搜索教材、物品..." oninput="renderItems()">
+    <button onclick="renderItems()">搜索</button>
+  </div>
+
+  <div class="category-tabs" id="category-tabs">
+    <div class="category-tab active" data-cat="all" onclick="switchCategory('all', this)">全部</div>
+    <div class="category-tab" data-cat="textbook" onclick="switchCategory('textbook', this)">📚 教材</div>
+    <div class="category-tab" data-cat="digital" onclick="switchCategory('digital', this)">💻 数码</div>
+    <div class="category-tab" data-cat="life" onclick="switchCategory('life', this)">🏠 生活</div>
+    <div class="category-tab" data-cat="sports" onclick="switchCategory('sports', this)">⚽ 运动</div>
+    <div class="category-tab" data-cat="other" onclick="switchCategory('other', this)">📦 其他</div>
+  </div>
+
+  <div class="item-list" id="item-list"></div>
+  <div class="empty-state" id="empty-state" style="display:none;">
+    <div class="icon">📭</div>
+    <p>暂无相关物品</p>
+  </div>
+</div>
+
+<!-- ==================== 发布页面 ==================== -->
+<div class="page" id="page-publish">
+  <div class="header">
+    <div class="logo"><span>📝</span>发布物品</div>
+    <div style="width:60px;"></div>
+  </div>
+
+  <div style="padding: 16px;">
+    <div class="form-group">
+      <label>类型</label>
+      <select id="publish-type" onchange="toggleCourseField()">
+        <option value="textbook">📚 二手教材</option>
+        <option value="digital">💻 数码产品</option>
+        <option value="life">🏠 生活用品</option>
+        <option value="sports">⚽ 运动装备</option>
+        <option value="other">📦 其他闲置</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="course-group">
+      <label>关联课程（选填）</label>
+      <input type="text" id="publish-course" placeholder="如：高等数学、大学英语">
+    </div>
+
+    <div class="form-group">
+      <label>标题 <span style="color:var(--danger)">*</span></label>
+      <input type="text" id="publish-title" placeholder="简要描述你要转让的物品" maxlength="50">
+    </div>
+
+    <div class="form-group">
+      <label>详细描述</label>
+      <textarea id="publish-desc" placeholder="可以描述物品的成色、使用情况、转让原因等" maxlength="300"></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>原价 (¥)</label>
+        <input type="number" id="publish-original" placeholder="0" min="0" step="0.01">
+      </div>
+      <div class="form-group">
+        <label>转让价 (¥) <span style="color:var(--danger)">*</span></label>
+        <input type="number" id="publish-price" placeholder="0" min="0" step="0.01">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label>成色</label>
+      <select id="publish-condition">
+        <option value="全新">全新</option>
+        <option value="九成新">九成新</option>
+        <option value="八成新">八成新</option>
+        <option value="七成新">七成新</option>
+        <option value="六成新及以下">六成新及以下</option>
+      </select>
+    </div>
+
+        <div class="form-group">
+      <label>上传图片（选填）</label>
+      <input type="file" id="publish-image" accept="image/*" style="margin-bottom:8px;">
+      <div id="image-preview" style="display:none;width:100px;height:100px;border-radius:8px;overflow:hidden;margin-bottom:8px;">
+        <img id="preview-img" style="width:100%;height:100%;object-fit:cover;">
+      </div>
+      <label>或选择emoji代表</label>
+      <select id="publish-emoji">
+        <option value="📚">📚 教材</option>
+        <option value="💻">💻 电脑</option>
+        <option value="📱">📱 手机</option>
+        <option value="⌨️">⌨️ 键盘</option>
+        <option value="🎧">🎧 耳机</option>
+        <option value="📷">📷 相机</option>
+        <option value="🪑">🪑 家具</option>
+        <option value="🚲">🚲 自行车</option>
+        <option value="⚽">⚽ 球类</option>
+        <option value="👕">👕 衣物</option>
+        <option value="📦">📦 其他</option>
+      </select>
+    </div>
+
+    <button class="btn-primary" onclick="publishItem()">📢 发布</button>
+    <button class="btn-outline" style="margin-top:8px;" onclick="switchPage('home')">取消</button>
+  </div>
+</div>
+<!-- ==================== 编辑弹窗 ==================== -->
+<div class="modal" id="edit-modal" style="display:none;">
+  <div class="modal-content">
+    <div class="modal-header">
+      <span>✏️ 编辑物品</span>
+      <span class="modal-close" onclick="closeEdit()">✕</span>
+    </div>
+    <div style="padding:16px;max-height:70vh;overflow-y:auto;">
+      <div class="form-group">
+        <label>类型</label>
+        <select id="edit-type">
+          <option value="textbook">📚 二手教材</option>
+          <option value="digital">💻 数码产品</option>
+          <option value="life">🏠 生活用品</option>
+          <option value="sports">⚽ 运动装备</option>
+          <option value="other">📦 其他闲置</option>
+        </select>
+      </div>
+      <div class="form-group" id="edit-course-group">
+        <label>关联课程（选填）</label>
+        <input type="text" id="edit-course" placeholder="如：高等数学">
+      </div>
+      <div class="form-group">
+        <label>标题</label>
+        <input type="text" id="edit-title" maxlength="50">
+      </div>
+      <div class="form-group">
+        <label>详细描述</label>
+        <textarea id="edit-desc" maxlength="300"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>原价 (¥)</label><input type="number" id="edit-original" min="0" step="0.01"></div>
+        <div class="form-group"><label>转让价 (¥)</label><input type="number" id="edit-price" min="0" step="0.01"></div>
+      </div>
+      <div class="form-group">
+        <label>成色</label>
+        <select id="edit-condition">
+          <option value="全新">全新</option><option value="九成新">九成新</option><option value="八成新">八成新</option><option value="七成新">七成新</option><option value="六成新及以下">六成新及以下</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>上传图片（选填）</label>
+        <input type="file" id="edit-image" accept="image/*">
+        <div id="edit-image-preview" style="display:none;width:100px;height:100px;border-radius:8px;overflow:hidden;margin-top:8px;">
+          <img id="edit-preview-img" style="width:100%;height:100%;object-fit:cover;">
+        </div>
+      </div>
+      <div class="form-group">
+        <label>或选择emoji</label>
+        <select id="edit-emoji">
+          <option value="📚">📚</option><option value="💻">💻</option><option value="📱">📱</option><option value="⌨️">⌨️</option><option value="🎧">🎧</option><option value="📷">📷</option><option value="🪑">🪑</option><option value="🚲">🚲</option><option value="⚽">⚽</option><option value="👕">👕</option><option value="📦">📦</option>
+        </select>
+      </div>
+      <button class="btn-primary" onclick="saveEdit()">💾 保存修改</button>
+      <button class="btn-outline" style="margin-top:8px;" onclick="closeEdit()">取消</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="action-modal" style="display:none;">
+  <div class="modal-content" style="max-width:320px;">
+    <div class="modal-header"><span>⚙️ 操作</span><span class="modal-close" onclick="closeAction()">✕</span></div>
+    <div style="padding:16px;text-align:center;">
+      <div id="action-title" style="font-weight:600;margin-bottom:12px;"></div>
+      <button class="btn-primary" onclick="editFromAction()" style="margin-bottom:8px;">✏️ 编辑</button>
+      <button class="btn-outline" onclick="markSoldFromAction()" style="margin-bottom:8px;">✅ 标记已售</button>
+      <button class="btn-outline" style="background:#ff4444;color:#fff;border:none;" onclick="deleteFromAction()">🗑️ 删除</button>
+    </div>
+  </div>
+</div>
+<!-- ==================== 收藏页面 ==================== -->
+<div class="page" id="page-favorites">
+  <div class="header">
+    <div class="logo"><span>⭐</span>我的收藏</div>
+    <div style="width:60px;"></div>
+  </div>
+  <div style="padding:16px;">
+    <div id="fav-empty" style="text-align:center;padding:60px 20px;color:#bbb;">
+      <div style="font-size:48px;margin-bottom:12px;">⭐</div>
+      <p>还没有收藏任何商品</p>
+      <p style="font-size:12px;">在首页点击商品旁的五角星即可收藏</p>
+    </div>
+    <div id="fav-list" style="display:flex;flex-direction:column;gap:10px;"></div>
+  </div>
+</div>
+<!-- ==================== 我的页面 ==================== -->
+<div class="page" id="page-mine">
+  <div class="header">
+    <div class="logo"><span>👤</span>我的</div>
+    <div style="width:60px;"></div>
+  </div>
+
+  <div class="profile-card">
+    <div class="avatar" id="my-avatar">🎓</div>
+    <div class="profile-info">
+      <div class="p-name" id="my-name"></div>
+      <div class="p-dept" id="my-dept"></div>
+    </div>
+    <button class="mark-sold-btn" onclick="showEditNickname()" style="flex-shrink:0;">✏️ 改昵称</button>
+  </div>
+
+  <div id="edit-nickname-box" style="display:none;margin:0 16px 12px;background:var(--card);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow);">
+    <div class="form-group" style="margin-bottom:8px;">
+      <label>新的对外昵称</label>
+      <input type="text" id="edit-nickname-input" placeholder="输入新昵称（最多12字）" maxlength="12">
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn-primary" onclick="saveNickname()" style="flex:1;margin-top:0;padding:10px;font-size:14px;">💾 保存</button>
+      <button class="btn-outline" onclick="cancelEditNickname()" style="flex:1;margin-top:0;padding:10px;font-size:14px;">取消</button>
+    </div>
+  </div>
+
+  <div class="section-title">📋 我发布的物品</div>
+  <div class="my-items" id="my-items-list"></div>
+  <div class="empty-state" id="my-empty" style="display:none;">
+    <div class="icon">📭</div>
+    <p>还没有发布过物品</p>
+  </div>
+
+  <div style="padding: 16px;">
+    <button class="btn-outline" onclick="logout()" style="color: var(--danger); border-color: var(--danger);">退出登录</button>
+      <button class="btn-outline" onclick="deleteAccount()" style="color: var(--danger); border-color: var(--danger); margin-top: 8px;">⚠️ 注销账号</button>
+  </div>
+</div>
+<!-- ==================== 消息页 ==================== -->
+<div class="page page-messages" id="page-messages">
+  <div class="header">
+    <div class="logo"><span class="logo-icon">💬</span>消息</div>
+  </div>
+  <div id="conv-list">
+    <div class="chat-empty">暂无消息</div>
+  </div>
+</div>
+
+<!-- ==================== 聊天弹窗 ==================== -->
+<div class="modal-overlay" id="chat-modal" style="display:none;">
+  <div class="modal-sheet" style="display:flex;flex-direction:column;height:100vh;padding:0;">
+    <div class="chat-header">
+      <span class="back-btn" onclick="closeChat()">✕</span>
+      <div style="flex:1;">
+        <div id="chat-title" style="font-weight:600;font-size:15px;"></div>
+        <div id="chat-subtitle" style="font-size:12px;color:#999;"></div>
+      </div>
+    </div>
+    <div class="chat-body" id="chat-body">
+      <div class="chat-empty">暂无消息</div>
+    </div>
+    <div class="chat-input-bar">
+      <input type="text" id="chat-input" placeholder="输入消息..." onkeydown="if(event.key==='Enter')sendChatMsg()">
+      <button onclick="sendChatMsg()">发送</button>
+    </div>
+  </div>
+</div>
+<!-- ==================== 底部导航 ==================== -->
+<div class="bottom-nav" id="bottom-nav" style="display:none;">
+  <button class="nav-item active" data-page="home" onclick="switchPage('home')">
+    <span class="nav-icon">🏠</span>首页
+  </button>
+    <button class="nav-item" data-page="messages" onclick="switchPage('messages')">
+    <span class="nav-icon">💬</span>消息
+  </button>
+  <button class="nav-item publish-btn" data-page="publish" onclick="switchPage('publish')">
+    <span class="nav-icon">＋</span>
+  </button>  
+  <button class="nav-item" data-page="favorites" onclick="switchPage('favorites')">
+    <span class="nav-icon">⭐</span>收藏
+  </button>
+  <button class="nav-item" data-page="mine" onclick="switchPage('mine')">
+    <span class="nav-icon">👤</span>我的
+  </button>
+</div>
+
+<!-- ==================== 详情弹窗 ==================== -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal-sheet" id="detail-sheet">
+    <div class="modal-handle"></div>
+    <div id="detail-content"></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'http://localhost:3000';
+const USER_KEY = 'campushelp_user';
+
+function getUser() {
+  try { return JSON.parse(localStorage.getItem(USER_KEY)); } catch(e) { return null; }
+}
+
+function saveUser(user) { localStorage.setItem(USER_KEY, JSON.stringify(user)); }
+
+let currentCategory = 'all';
+let currentPage = 'home';
+
+document.addEventListener('DOMContentLoaded', function() {
+  const user = getUser();
+  if (user) { showApp(); switchPage('home'); }
+});
+
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) closeDetail();
+});
+
+let authMode = 'login';
+
+function switchAuthTab(mode) {
+  authMode = mode;
+  document.getElementById('auth-tab-login').classList.toggle('active', mode === 'login');
+  document.getElementById('auth-tab-register').classList.toggle('active', mode === 'register');
+  document.getElementById('auth-btn-login').style.display = mode === 'login' ? 'block' : 'none';
+  document.getElementById('auth-btn-register').style.display = mode === 'register' ? 'block' : 'none';
+  document.getElementById('auth-register-fields').style.display = mode === 'register' ? 'block' : 'none';
+}
+
+function doRegister() {
+  const studentId = document.getElementById('auth-student-id').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const realName = document.getElementById('auth-real-name').value.trim();
+  const email = document.getElementById('auth-email').value.trim();
+  const displayName = document.getElementById('auth-display-name').value.trim();
+  const department = document.getElementById('auth-department').value;
+  const grade = document.getElementById('auth-grade').value;
+  const role = document.getElementById('auth-role').value;
+
+  if (!studentId || studentId.length < 4) { showToast('请输入有效的学号/工号'); return; }
+  if (!password || password.length < 6) { showToast('密码至少6位'); return; }
+  if (!realName) { showToast('请输入真实姓名'); return; }
+  if (!email) { showToast('请输入学校邮箱'); return; }
+  if (!department) { showToast('请选择院系'); return; }
+  if (!grade) { showToast('请选择入学年份'); return; }
+
+  fetch(API_BASE + '/api/register', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId, password, realName, email, displayName, department, grade, role })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok && data.needVerify) {
+      document.getElementById('auth-register-fields').style.display = 'none';
+      document.getElementById('auth-register-btn-group').style.display = 'none';
+      document.getElementById('auth-verify-section').style.display = 'block';
+    }
+    showToast(data.msg);
+  })
+  .catch(() => showToast('网络错误，请确认服务器已启动'));
+}
+function doVerify() {
+  const studentId = document.getElementById('auth-student-id').value.trim();
+  const code = document.getElementById('auth-verify-code').value.trim();
+  if (!code) { showToast('请输入验证码'); return; }
+
+  fetch(API_BASE + '/api/verify-email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId, code })
+  })
+  .then(res => res.json())
+  .then(data => {
+    showToast(data.msg);
+    if (data.ok) { saveUser(data.user); showApp(); switchPage('home'); }
+  })
+  .catch(() => showToast('网络错误'));
+}
+
+function cancelVerify() {
+  document.getElementById('auth-verify-section').style.display = 'none';
+  document.getElementById('auth-register-fields').style.display = 'block';
+  document.getElementById('auth-register-btn-group').style.display = 'block';
+}
+
+function doLogin() {
+  const studentId = document.getElementById('auth-student-id').value.trim();
+  const password = document.getElementById('auth-password').value;
+
+  if (!studentId || studentId.length < 4) { showToast('请输入有效的学号/工号'); return; }
+  if (!password) { showToast('请输入密码'); return; }
+
+  fetch(API_BASE + '/api/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId, password })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) { saveUser(data.user); showApp(); switchPage('home'); }
+    showToast(data.msg);
+  })
+  .catch(() => showToast('网络错误，请确认服务器已启动'));
+}
+
+function showApp() {
+  const user = getUser();
+  document.getElementById('home-dept').textContent = user.displayName;
+  document.getElementById('my-name').textContent = user.displayName;
+  document.getElementById('my-dept').textContent = user.department + ' · ' + (user.grade === '教师' ? '教师' : user.grade + '级');
+  document.getElementById('my-avatar').textContent = user.role === 'teacher' ? '👨‍🏫' : '🎓';
+  document.getElementById('bottom-nav').style.display = 'flex';
+  document.getElementById('page-auth').classList.remove('active');
+}
+
+function showEditNickname() {
+  document.getElementById('edit-nickname-input').value = getUser().displayName;
+  document.getElementById('edit-nickname-box').style.display = 'block';
+}
+
+function saveNickname() {
+  const newName = document.getElementById('edit-nickname-input').value.trim();
+  if (!newName) { showToast('昵称不能为空'); return; }
+  if (newName.length > 12) { showToast('昵称最多12个字'); return; }
+
+  const user = getUser();
+  fetch(API_BASE + '/api/user/nickname', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId: user.studentId, displayName: newName })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) {
+      user.displayName = newName; saveUser(user);
+      document.getElementById('edit-nickname-box').style.display = 'none';
+      document.getElementById('home-dept').textContent = newName;
+      document.getElementById('my-name').textContent = newName;
+    }
+    showToast(data.msg);
+  })
+  .catch(() => showToast('网络错误'));
+}
+
+function cancelEditNickname() {
+  document.getElementById('edit-nickname-box').style.display = 'none';
+}
+
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  const target = document.getElementById('page-' + page);
+  if (target) target.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navItem = document.querySelector('.nav-item[data-page="' + page + '"]');
+  if (navItem) navItem.classList.add('active');
+  if (page === 'home') renderItems();
+  if (page === 'mine') renderMyItems();
+    if (page === 'favorites') renderFavorites();
+  if (page === 'messages') renderConversations();
+  window.scrollTo(0, 0);
+}
+
+function switchCategory(cat, el) {
+  currentCategory = cat;
+  document.querySelectorAll('.category-tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  renderItems();
+}
+
+let allItemsCache = [];
+
+function renderItems() {
+  const searchTerm = document.getElementById('search-input').value.trim();
+  let url = API_BASE + '/api/items?category=' + currentCategory;
+  if (searchTerm) url += '&search=' + encodeURIComponent(searchTerm);
+
+  fetch(url)
+  .then(res => res.json())
+  .then(data => {
+    if (!data.ok) return;
+    allItemsCache = data.items;
+    const container = document.getElementById('item-list');
+    const empty = document.getElementById('empty-state');
+    if (data.items.length === 0) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    container.innerHTML = data.items.map(item => {
+      const typeTag = item.type === 'textbook' ? '<span class="tag tag-textbook">教材</span>' : '<span class="tag tag-other">闲置</span>';
+      const originalPriceHtml = item.original_price > 0 ? `<span class="original-price">¥${item.original_price.toFixed(2)}</span>` : '';
+      const bgClass = 'bg-' + ((item.id % 5) + 1);
+            return `<div class="item-card" onclick="openDetail(${item.id})" style="position:relative;">
+        <span onclick="event.stopPropagation();toggleFav(${item.id})" style="position:absolute;top:8px;right:8px;font-size:20px;cursor:pointer;z-index:2;">${getFavorites().includes(item.id) ? '⭐' : '☆'}</span>
+                ${item.image ? `<div class="thumb" style="background:none;padding:0;"><img src="${item.image}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"></div>` : `<div class="thumb ${bgClass}"><span class="img-placeholder">${item.emoji || '📦'}</span></div>`}
+        <div class="info">
+          <div class="title">${escapeHtml(item.title)}</div>
+          <div class="meta">${typeTag}<span>${item.department.replace('学院','').substring(0,5)}</span><span>${item.grade === '教师' ? '教师' : item.grade + '级'}</span></div>
+          <div class="price-row"><div><span class="price"><span class="unit">¥</span>${item.price.toFixed(2)}</span>${originalPriceHtml}</div><span style="font-size:11px;color:#bbb;">${timeAgo(item.created_at)}</span></div>
+        </div>
+      </div>`;
+    }).join('');
+  })
+  .catch(() => showToast('加载失败，请确认服务器已启动'));
+}
+
+function openDetail(id) {
+  const item = allItemsCache.find(i => i.id === id);
+  if (!item) return;
+  const typeLabel = item.type === 'textbook' ? '📚 教材' : '📦 闲置';
+  const bgClass = 'bg-' + ((item.id % 5) + 1);
+  const statusBadge = item.status === 'sold' ? '<span class="tag tag-sold">已售出</span>' : '';
+  const originalPriceHtml = item.original_price > 0 ? `原价 <span style="text-decoration:line-through;color:#bbb;">¥${item.original_price.toFixed(2)}</span>` : '';
+  let courseHtml = item.course ? `<span>📖 ${escapeHtml(item.course)}</span>` : '';
+
+  document.getElementById('detail-content').innerHTML = `
+        <div class="detail-images">${item.image ? `<img src="${item.image}" style="width:100%;height:100%;object-fit:cover;border-radius:12px;">` : `<div class="d-img ${bgClass}">${item.emoji || '📦'}</div>`}</div>
+    ${statusBadge}
+    <div class="detail-title">${escapeHtml(item.title)}</div>
+    <div class="detail-meta"><span>${typeLabel}</span>${courseHtml}<span>${item.department.replace('学院','').substring(0,5)} · ${item.grade === '教师' ? '教师' : item.grade + '级'}</span><span>成色: ${item.condition}</span><span>${timeAgo(item.created_at)}</span></div>
+    <div class="detail-price">¥${item.price.toFixed(2)} <span style="font-size:14px;font-weight:400;color:var(--text-secondary);">${originalPriceHtml}</span></div>
+    <div class="detail-desc">${escapeHtml(item.description)}</div>
+        ${item.status === 'active' ? `<button class="contact-btn" onclick="contactSeller('${item.user_id}', ${item.id}, '${escapeHtml(item.title)}')">💬 联系发布者</button>` : `<button class="contact-btn" style="background:#bbb;cursor:not-allowed;" disabled>已售出</button>`}
+    <button class="fav-btn" onclick="closeDetail()">关闭</button>
+  `;
+  document.getElementById('detail-modal').classList.add('show');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+  document.getElementById('detail-modal').classList.remove('show');
+  document.body.style.overflow = '';
+}
+
+function contactSeller(toUserId, itemId, title) {
+  const user = getUser();
+  if (!user) return;
+  closeDetail();
+  setTimeout(() => {
+    const item = allItemsCache.find(i => i.id === itemId);
+    const withName = item ? item.display_name : '未知用户';
+    openChat(toUserId, itemId, title, withName);
+  }, 30);
+}
+
+function toggleCourseField() {
+  document.getElementById('course-group').style.display = document.getElementById('publish-type').value === 'textbook' ? 'block' : 'none';
+}
+
+function publishItem() {
+  const user = getUser();
+  if (!user) { showToast('请先完成认证'); return; }
+
+  const imageInput = document.getElementById('publish-image');
+  const imageFile = imageInput.files[0];
+  if (imageFile) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      doPublish(e.target.result);
+    };
+    reader.readAsDataURL(imageFile);
+  } else {
+    doPublish('');
+  }
+}
+
+function doPublish(imageBase64) {
+  const user = getUser();
+  const type = document.getElementById('publish-type').value;
+  const course = document.getElementById('publish-course').value.trim();
+  const title = document.getElementById('publish-title').value.trim();
+  const desc = document.getElementById('publish-desc').value.trim();
+  const originalPrice = parseFloat(document.getElementById('publish-original').value) || 0;
+  const price = parseFloat(document.getElementById('publish-price').value) || 0;
+  const condition = document.getElementById('publish-condition').value;
+  const emoji = document.getElementById('publish-emoji').value;
+
+  if (!title) { showToast('请输入标题'); return; }
+  if (price <= 0) { showToast('请输入有效的转让价格'); return; }
+
+  fetch(API_BASE + '/api/items', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId: user.studentId, type, course, title, description: desc || '暂无详细描述', originalPrice, price, condition, emoji, image: imageBase64, department: user.department, grade: user.grade, role: user.role, displayName: user.displayName })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) {
+      document.getElementById('publish-title').value = '';
+      document.getElementById('publish-desc').value = '';
+      document.getElementById('publish-original').value = '';
+      document.getElementById('publish-price').value = '';
+      document.getElementById('publish-course').value = '';
+      document.getElementById('publish-image').value = '';
+      document.getElementById('image-preview').style.display = 'none';
+      switchPage('home');
+      loadItems(currentCategory);
+      showToast('✅ 发布成功');
+    } else {
+      showToast(data.msg);
+    }
+  })
+  .catch(() => showToast('网络错误'));
+}
+document.getElementById('publish-image').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('preview-img').src = ev.target.result;
+    document.getElementById('image-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+function renderMyItems() {
+  const user = getUser();
+  if (!user) return;
+
+  fetch(API_BASE + '/api/my-items?studentId=' + user.studentId)
+  .then(res => res.json())
+  .then(data => {
+    if (!data.ok) return;
+    const container = document.getElementById('my-items-list');
+    const empty = document.getElementById('my-empty');
+    if (data.items.length === 0) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+    empty.style.display = 'none';
+    container.innerHTML = data.items.map(item => `
+            <div class="my-item-card" onclick="showItemActions(${item.id})" style="cursor:pointer;">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
+                    ${item.image ? `<img src="${item.image}" style="width:40px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0;">` : `<span style="font-size:28px;">${item.emoji || '📦'}</span>`}
+          <div class="my-info"><div class="my-title">${escapeHtml(item.title)}</div><div class="my-price">¥${item.price.toFixed(2)} · ${item.condition}</div></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+                    <span class="my-status ${item.status === 'active' ? 'status-active' : 'status-sold'}">${item.status === 'active' ? '在售' : '已售'}</span>
+                    
+        </div>
+      </div>
+    `).join('');
+  })
+  .catch(() => showToast('加载失败'));
+}
+
+function markSold(id) {
+  const user = getUser();
+  fetch(API_BASE + '/api/items/' + id + '/sold', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId: user.studentId })
+  })
+  .then(res => res.json())
+  .then(data => { showToast(data.msg); renderMyItems(); renderItems(); })
+  .catch(() => showToast('操作失败'));
+}
+function getFavorites() {
+  const user = getUser();
+  if (!user) return [];
+  return JSON.parse(localStorage.getItem('fav_' + user.studentId) || '[]');
+}
+function toggleFav(itemId) {
+  const user = getUser();
+  if (!user) { showToast('请先登录'); return; }
+  const favs = getFavorites();
+  const idx = favs.indexOf(itemId);
+  if (idx > -1) { favs.splice(idx, 1); showToast('已取消收藏'); }
+  else { favs.push(itemId); showToast('⭐ 已收藏'); }
+  localStorage.setItem('fav_' + user.studentId, JSON.stringify(favs));
+  renderItems();
+}
+function renderFavorites() {
+  const favs = getFavorites();
+  const container = document.getElementById('fav-list');
+  const empty = document.getElementById('fav-empty');
+  if (favs.length === 0) { container.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  const items = allItemsCache.filter(i => favs.includes(i.id));
+  container.innerHTML = items.map(item => {
+    var bg = 'bg-' + ((item.id % 5) + 1);
+    var imgHtml = item.image ? '<div class="thumb" style="background:none;padding:0;"><img src="' + item.image + '" style="width:100%;height:100%;object-fit:cover;border-radius:12px;"></div>' : '<div class="thumb ' + bg + '"><span class="img-placeholder">' + (item.emoji || '📦') + '</span></div>';
+    return '<div class="item-card" onclick="openDetail(' + item.id + ')">' + imgHtml + '<div class="info"><div class="title">' + escapeHtml(item.title) + '</div><div class="price-row"><span class="price">¥' + item.price.toFixed(2) + '</span></div></div></div>';
+  }).join('');
+}
+let editingItemId = null;
+let actionItemId = null;
+function showItemActions(id) {
+  const item = allItemsCache.find(i => i.id === id);
+  if (!item || item.status !== 'active') return;
+  actionItemId = id;
+  document.getElementById('action-title').textContent = item.title;
+  document.getElementById('action-modal').style.display = 'flex';
+}
+function closeAction() { document.getElementById('action-modal').style.display = 'none'; actionItemId = null; }
+function editFromAction() { const id = actionItemId; closeAction(); editItem(id); }
+function markSoldFromAction() { const id = actionItemId; closeAction(); markSold(id); }
+function deleteFromAction() { const id = actionItemId; closeAction(); deleteItem(id); }
+function editItem(id) {
+  const item = allItemsCache.find(i => i.id === id);
+  if (!item) return;
+  editingItemId = id;
+  document.getElementById('edit-type').value = item.type || 'other';
+  document.getElementById('edit-course').value = item.course || '';
+  document.getElementById('edit-title').value = item.title || '';
+  document.getElementById('edit-desc').value = item.description || '';
+  document.getElementById('edit-original').value = item.original_price || '';
+  document.getElementById('edit-price').value = item.price || '';
+  document.getElementById('edit-condition').value = item.condition || '八成新';
+  document.getElementById('edit-emoji').value = item.emoji || '📦';
+  if (item.image) {
+    document.getElementById('edit-preview-img').src = item.image;
+    document.getElementById('edit-image-preview').style.display = 'block';
+  } else {
+    document.getElementById('edit-image-preview').style.display = 'none';
+  }
+  document.getElementById('edit-modal').style.display = 'flex';
+}
+
+function closeEdit() {
+  document.getElementById('edit-modal').style.display = 'none';
+  document.getElementById('edit-image').value = '';
+  editingItemId = null;
+}
+
+function saveEdit() {
+  if (!editingItemId) return;
+  const user = getUser();
+  const title = document.getElementById('edit-title').value.trim();
+  const price = parseFloat(document.getElementById('edit-price').value) || 0;
+  if (!title) { showToast('请输入标题'); return; }
+  if (price <= 0) { showToast('请输入有效的价格'); return; }
+
+  const imageInput = document.getElementById('edit-image');
+  const imageFile = imageInput.files[0];
+  if (imageFile) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      doSaveEdit(e.target.result);
+    };
+    reader.readAsDataURL(imageFile);
+  } else {
+    const existingImg = document.getElementById('edit-preview-img').src;
+    doSaveEdit(existingImg && existingImg.startsWith('data:') ? existingImg : (document.getElementById('edit-image-preview').style.display === 'block' ? existingImg : ''));
+  }
+}
+
+function doSaveEdit(imageBase64) {
+  const user = getUser();
+  const body = {
+    studentId: user.studentId,
+    type: document.getElementById('edit-type').value,
+    course: document.getElementById('edit-course').value.trim(),
+    title: document.getElementById('edit-title').value.trim(),
+    description: document.getElementById('edit-desc').value.trim(),
+    originalPrice: parseFloat(document.getElementById('edit-original').value) || 0,
+    price: parseFloat(document.getElementById('edit-price').value) || 0,
+    condition: document.getElementById('edit-condition').value,
+    emoji: document.getElementById('edit-emoji').value,
+    image: imageBase64
+  };
+
+  fetch(API_BASE + '/api/items/' + editingItemId, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) {
+      closeEdit();
+      renderMyItems();
+      loadItems(currentCategory);
+      showToast('✅ 已更新');
+    } else { showToast(data.msg); }
+  })
+  .catch(() => showToast('网络错误'));
+}
+
+function deleteItem(id) {
+  if (!confirm('确定要删除这个物品吗？')) return;
+  const user = getUser();
+  fetch(API_BASE + '/api/items/' + id, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId: user.studentId })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) { renderMyItems(); loadItems(currentCategory); showToast('✅ 已删除'); }
+    else { showToast(data.msg); }
+  })
+  .catch(() => showToast('网络错误'));
+}
+
+document.getElementById('edit-image').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    document.getElementById('edit-preview-img').src = ev.target.result;
+    document.getElementById('edit-image-preview').style.display = 'block';
+  };
+  reader.readAsDataURL(file);
+});
+function logout() {
+  if (confirm('确定要退出登录吗？')) { localStorage.removeItem(USER_KEY); location.reload(); }
+
+}function deleteAccount() {
+  if (!confirm('⚠️ 注销后所有数据和发布的物品将被永久删除，无法恢复！\n确定要继续吗？')) return;
+  const user = getUser();
+  const pwd = prompt('请输入密码确认注销：');
+  if (!pwd) return;
+
+  fetch(API_BASE + '/api/user/delete', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId: user.studentId, password: pwd })
+  })
+  .then(res => res.json())
+  .then(data => {
+    showToast(data.msg);
+    if (data.ok) { localStorage.removeItem(USER_KEY); location.reload(); }
+  })
+  .catch(() => showToast('网络错误'));
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toast._timeout);
+  toast._timeout = setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function timeAgo(timestamp) {
+  const diff = Date.now() - timestamp;
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return '刚刚';
+  if (minutes < 60) return minutes + '分钟前';
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + '小时前';
+  const days = Math.floor(hours / 24);
+  if (days < 30) return days + '天前';
+  return Math.floor(days / 30) + '个月前';
+}
+let chatWith = null, chatItemId = null, chatTitle = '';
+
+function renderConversations() {
+  const user = getUser();
+  if (!user) return;
+  fetch(API_BASE + '/api/conversations?studentId=' + user.studentId)
+  .then(res => res.json())
+  .then(data => {
+    const container = document.getElementById('conv-list');
+    if (!data.ok || data.conversations.length === 0) {
+      container.innerHTML = '<div class="chat-empty">暂无消息</div>'; return;
+    }
+    container.innerHTML = data.conversations.map(c => {
+      const unreadBadge = c.unread > 0 ? `<span class="conv-badge">${c.unread}</span>` : '';
+      return `<div class="conv-card" onclick="openChat('${c.with}', ${c.itemId}, '${escapeHtml(c.itemTitle)}', '${escapeHtml(c.withName)}')">
+        <div class="conv-avatar" style="background:#e8f0fe;">💬</div>
+        <div class="conv-info">
+          <div class="conv-name">${escapeHtml(c.withName)} · ${escapeHtml(c.itemTitle)}</div>
+          <div class="conv-preview">${escapeHtml(c.lastMsg)}</div>
+        </div>
+        <div class="conv-meta">
+          <div class="conv-time">${timeAgo(c.lastTime)}</div>
+          ${unreadBadge}
+        </div>
+      </div>`;
+    }).join('');
+  });
+}
+
+function openChat(withUser, itemId, title, withName) {
+  chatWith = withUser; chatItemId = itemId; chatTitle = title;
+  document.getElementById('chat-title').textContent = title;
+  document.getElementById('chat-subtitle').textContent = '与 ' + withName + ' 的对话';
+  document.getElementById('chat-modal').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  renderChatMessages();
+  const user = getUser();
+  fetch(API_BASE + '/api/messages/read', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ studentId: user.studentId, withUser: withUser, itemId: itemId })
+  }).then(() => renderConversations());
+}
+
+function closeChat() {
+  document.getElementById('chat-modal').style.display = 'none';
+  document.body.style.overflow = '';
+  chatWith = null; chatItemId = null;
+  if (currentPage === 'messages') renderConversations();
+}
+
+function renderChatMessages() {
+  const user = getUser();
+  if (!user || !chatWith || !chatItemId) return;
+  fetch(API_BASE + '/api/conversation?studentId=' + user.studentId + '&with=' + chatWith + '&itemId=' + chatItemId)
+  .then(res => res.json())
+  .then(data => {
+    const body = document.getElementById('chat-body');
+    if (!data.ok || data.messages.length === 0) {
+      body.innerHTML = '<div class="chat-empty">暂无消息，发送第一条消息吧</div>'; return;
+    }
+    body.innerHTML = data.messages.map(m => {
+      const isMine = m.from_user === user.studentId;
+      return `<div class="chat-bubble ${isMine ? 'mine' : 'other'}">
+        <div>${escapeHtml(m.content)}</div>
+        <div class="bubble-time">${timeAgo(m.created_at)}</div>
+      </div>`;
+    }).join('');
+    body.scrollTop = body.scrollHeight;
+  });
+}
+
+function sendChatMsg() {
+  const user = getUser();
+  const input = document.getElementById('chat-input');
+  const content = input.value.trim();
+  if (!content || !chatWith || !chatItemId) return;
+
+  fetch(API_BASE + '/api/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ fromUser: user.studentId, fromName: user.displayName, toUser: chatWith, itemId: chatItemId, content })
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.ok) { input.value = ''; renderChatMessages(); }
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+{
+  "users": {
+    "u_5yxn9n": {
+      "id": "u_5yxn9n",
+      "real_name": "曾玓",
+      "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "department": "计算机学院",
+      "grade": "2025",
+      "role": "student",
+      "email": "2025012209@bistu.edu.cn",
+      "display_name": "di",
+      "created_at": 1783414316407
+    },
+    "u_5yxmqn": {
+      "id": "u_5yxmqn",
+      "real_name": "shabi",
+      "password": "8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92",
+      "department": "计算机学院",
+      "grade": "2025",
+      "role": "student",
+      "email": "2025012197@bistu.edu.cn",
+      "display_name": "niubi",
+      "created_at": 1783414354529
+    }
+  },
+  "items": [
+    {
+      "id": 3,
+      "type": "textbook",
+      "title": "s",
+      "course": "",
+      "description": "暂无详细描述",
+      "original_price": 0,
+      "price": 1,
+      "condition": "全新",
+      "emoji": "📚",
+      "image": "",
+      "department": "计算机学院",
+      "grade": "2025",
+      "role": "student",
+      "user_id": "u_5yxmqn",
+      "display_name": "niubi",
+      "status": "sold",
+      "created_at": 1783444469072
+    },
+    {
+      "id": 2,
+      "type": "textbook",
+      "title": "111",
+      "course": "",
+      "description": "暂无详细描述",
+      "original_price": 0,
+      "price": 100,
+      "condition": "全新",
+      "emoji": "📚",
+      "department": "计算机学院",
+      "grade": "2025",
+      "role": "student",
+      "user_id": "u_5yxmqn",
+      "display_name": "niubi",
+      "status": "active",
+      "created_at": 1783439445412
+    },
+    {
+      "id": 1,
+      "type": "textbook",
+      "title": "书",
+      "course": "",
+      "description": "暂无详细描述",
+      "original_price": 0,
+      "price": 100,
+      "condition": "全新",
+      "emoji": "📚",
+      "department": "计算机学院",
+      "grade": "2025",
+      "role": "student",
+      "user_id": "u_5yxmqn",
+      "display_name": "niubi",
+      "status": "sold",
+      "created_at": 1783414398643
+    }
+  ],
+  "messages": [
+    {
+      "id": 1,
+      "from_user": "u_5yxn9n",
+      "from_name": "di",
+      "to_user": "u_5yxmqn",
+      "item_id": 1,
+      "content": "你好",
+      "created_at": 1783414417711,
+      "is_read": true
+    },
+    {
+      "id": 2,
+      "from_user": "u_5yxmqn",
+      "from_name": "niubi",
+      "to_user": "u_5yxn9n",
+      "item_id": 1,
+      "content": "可以",
+      "created_at": 1783414432909,
+      "is_read": true
+    },
+    {
+      "id": 3,
+      "from_user": "u_5yxmqn",
+      "from_name": "niubi",
+      "to_user": "u_5yxn9n",
+      "item_id": 1,
+      "content": "50",
+      "created_at": 1783414437170,
+      "is_read": true
+    },
+    {
+      "id": 4,
+      "from_user": "u_5yxn9n",
+      "from_name": "di",
+      "to_user": "u_5yxmqn",
+      "item_id": 1,
+      "content": "好",
+      "created_at": 1783414453799,
+      "is_read": true
+    },
+    {
+      "id": 5,
+      "from_user": "u_5yxn9n",
+      "from_name": "di",
+      "to_user": "u_5yxmqn",
+      "item_id": 1,
+      "content": "草泥马",
+      "created_at": 1783417128771,
+      "is_read": true
+    },
+    {
+      "id": 6,
+      "from_user": "u_5yxmqn",
+      "from_name": "niubi",
+      "to_user": "u_5yxn9n",
+      "item_id": 1,
+      "content": "嘎嘎嘎嘎",
+      "created_at": 1783441914319,
+      "is_read": true
+    }
+  ],
+  "pendingUsers": {},
+  "nextItemId": 4
+}
