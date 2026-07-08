@@ -1,0 +1,39 @@
+name: pages build and deployment
+on:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 拉取源码
+        uses: actions/checkout@v4
+        with:
+          submodules: false
+      - name: 配置Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: 安装项目依赖（包含hexo本地包）
+        run: npm install
+      - name: 生成静态页面（使用npx调用本地hexo）
+        run: |
+          npx hexo clean
+          npx hexo generate
+      - name: 上传public静态文件
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./public
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+    steps:
+      - name: 部署Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
